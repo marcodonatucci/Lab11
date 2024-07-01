@@ -7,6 +7,7 @@ import networkx as nx
 class Model:
     def __init__(self):
         self._bestdTot = 0
+        self._solBest = []
         self._bestComp = []
         self.graph = nx.Graph()
         self.idMap = {}
@@ -62,21 +63,67 @@ class Model:
         self._bestdTot = 0
         # inizializzo il parziale con il nodo iniziale
         parziale = [p0]
-        for p in self.graph.neighbors(p0):
-            parziale.append(p)
-            self._ricorsionev2(parziale)
-            parziale.pop()  # rimuovo l'ultimo elemento aggiunto: backtracking
+        # Avvio la ricorsione direttamente
+        self._ricorsionev2(parziale)
         return self._bestComp
 
     def _ricorsionev2(self, parziale):
         # verifico se soluzione è migliore di quella salvata in cache
-        if len(parziale)-1 > self._bestdTot:
+        if len(parziale) - 1 > self._bestdTot:
             # se lo è aggiorno i valori migliori
             self._bestComp = copy.deepcopy(parziale)
-            self._bestdTot = len(parziale)-1
+            self._bestdTot = len(parziale) - 1
+
         # verifico se posso aggiungere un altro elemento
-        for a in self.graph.neighbors(parziale[-1]):
-            if a not in parziale and self.graph[parziale[-1]][a]["weight"] >= self.graph[parziale[-2]][parziale[-1]]["weight"]:
-                parziale.append(a)
-                self._ricorsionev2(parziale)
-                parziale.pop()  # rimuovo l'ultimo elemento aggiunto: backtracking
+        last_node = parziale[-1]
+        for a in self.graph.neighbors(last_node):
+            if a not in parziale:
+                # Controllo del peso dell'arco
+                if len(parziale) == 1 or self.graph[last_node][a]["weight"] >= self.graph[parziale[-2]][last_node]["weight"]:
+                    parziale.append(a)
+                    print(parziale)
+                    self._ricorsionev2(parziale)
+                    parziale.pop()
+
+    # def getPath(self, product_number):
+    #
+    #     parziale = []
+    #
+    #     self.ricorsione(parziale, product_number, 0)
+    #
+    #     print("final", len(self._solBest), [i[2]["weight"] for i in self._solBest])
+    #
+    # def ricorsione(self, parziale, nodoLast, livello):
+    #     archiViciniAmmissibili = self.getArchiViciniAmm(nodoLast, parziale)
+    #
+    #     if len(archiViciniAmmissibili) == 0:
+    #         if len(parziale) > len(self._solBest):
+    #             self._solBest = list(parziale)
+    #             print(len(self._solBest), [ii[2]["weight"] for ii in self._solBest])
+    #
+    #     for a in archiViciniAmmissibili:
+    #         parziale.append(a)
+    #         self.ricorsione(parziale, a[1], livello + 1)
+    #         parziale.pop()
+    #
+    # def getArchiViciniAmm(self, nodoLast, parziale):
+    #
+    #     archiVicini = self.graph.edges(nodoLast, data=True)
+    #     result = []
+    #     for a1 in archiVicini:
+    #         if self.isAscendent(a1, parziale) and self.isNovel(a1, parziale):
+    #             result.append(a1)
+    #     return result
+    #
+    # def isAscendent(self, e, parziale):
+    #     if len(parziale) == 0:
+    #         print("parziale is empty in isAscendent")
+    #         return True
+    #     return e[2]["weight"] >= parziale[-1][2]["weight"]
+    #
+    # def isNovel(self, e, parziale):
+    #     if len(parziale) == 0:
+    #         print("parziale is empty in isnovel")
+    #         return True
+    #     e_inv = (e[1], e[0], e[2])
+    #     return (e_inv not in parziale) and (e not in parziale)
